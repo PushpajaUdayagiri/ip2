@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCM Depth Prediction</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">Predict DCM Depth</h2>
+        <form id="predictionForm" class="border p-4 rounded shadow-sm">
+            <div class="row">
+                <div class="col-md-4 mb-3"><label class="form-label">CHLA_SAT</label><input type="number" step="any" class="form-control" id="chla_sat" required></div>
+                <div class="col-md-4 mb-3"><label class="form-label">BBP_DCM</label><input type="number" step="any" class="form-control" id="bbp_dcm" required></div>
+                <div class="col-md-4 mb-3"><label class="form-label">D26Depth</label><input type="number" step="any" class="form-control" id="d26depth" required></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Select Model</label>
+                <select class="form-control" id="model_choice" required>
+                    <option value="random_forest">Random Forest</option>
+                    <option value="neural_network">Neural Network</option>
+                    <option value="svm">Support Vector Machine (SVM)</option>
+                    <option value="decision_tree">Decision Tree</option>
+                    <option value="gradient_boosting">Gradient Boosting</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Predict</button>
+        </form>
+        <h4 class="mt-4" id="result"></h4>
+    </div>
+
+    <script>
+        
+            document.getElementById("predictionForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            let inputData = {
+                CHLA_SAT: parseFloat(document.getElementById("chla_sat").value),
+                BBP_DCM: parseFloat(document.getElementById("bbp_dcm").value),
+                D26Depth: parseFloat(document.getElementById("d26depth").value),
+                model: document.getElementById("model_choice").value // Selected model
+            };
+
+            fetch("http://127.0.0.1:5000/predict", {  // Send request to model_runner.py
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(inputData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.predicted_dcm_depth !== undefined) {
+                    document.getElementById("result").innerText = "Predicted DCM Depth: " + data.predicted_dcm_depth;
+                } else {
+                    document.getElementById("result").innerText = "Error: " + data.error;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("result").innerText = "Failed to fetch prediction.";
+            });
+        });
+
+    </script>
+</body>
+</html>
